@@ -1,6 +1,8 @@
-name: Build APK
+name: Build PixelIMS APK
 
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
 
 jobs:
@@ -26,18 +28,28 @@ jobs:
             platforms;android-35
             build-tools;35.0.0
 
+      - name: Cache Gradle packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/*.gradle.kts', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
       - name: Install Gradle
         run: |
           wget -q https://services.gradle.org/distributions/gradle-8.9-bin.zip
           unzip -q gradle-8.9-bin.zip -d "$RUNNER_TEMP"
           echo "$RUNNER_TEMP/gradle-8.9/bin" >> "$GITHUB_PATH"
 
-      - name: Build APK
-        run: gradle assembleDebug --stacktrace --no-daemon
+      - name: Build with Gradle
+        run: gradle assembleRelease --stacktrace --no-daemon
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: app-debug-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+          name: PixelIMS-release
+          path: app/build/outputs/apk/release/*.apk
           if-no-files-found: error
